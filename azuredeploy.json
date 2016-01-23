@@ -580,14 +580,6 @@
     "Gateway": {
       "type": "string",
       "value": "[reference(variables('publicIPAddressId')).IpAddress]"
-    },
-    "WebApp1": {
-      "type": "string",
-      "value": "[reference(variables('publicIPAddressWebApp1Id')).IpAddress]"
-    },
-    "WebApp2": {
-      "type": "string",
-      "value": "[reference(variables('publicIPAddressWebApp2Id')).IpAddress]"
     }
   }
 }
