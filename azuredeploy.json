@@ -165,7 +165,7 @@
     "subnet1Name": "Frontend",
     "subnet1Prefix": "10.0.1.0/24",
     "subnet1Id": "[concat(variables('vnetId'),'/subnets/',variables('subnet1Name'))]",
-    "subnet2Name": "Web",
+    "subnet2Name": "Backend",
     "subnet2Prefix": "10.0.2.0/24",
     "subnet2Id": "[concat(variables('vnetId'),'/subnets/',variables('subnet2Name'))]",
     "externalPrivateAddress": "10.0.1.10",
@@ -298,7 +298,6 @@
       "apiVersion": "[variables('apiVersion')]",
       "dependsOn": [
         "[variables('vnetId')]",
-        "[variables('lbId')]",
         "[variables('publicIPAddressId')]"
       ],
       "location": "[resourceGroup().location]",
@@ -352,9 +351,8 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
         "[concat('Microsoft.Network/networkInterfaces/', variables('nic1Name'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nic2Name'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nic3Name'))]"
-      ],
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nic2Name'))]"
+        ],
       "location": "[resourceGroup().location]",
       "name": "[parameters('vmName')]",
       "plan": "[variables('plan')]",
@@ -378,12 +376,6 @@
             },
             {
               "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nic2Name'))]",
-              "properties": {
-                "primary": false
-              }
-            },
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nic3Name'))]",
               "properties": {
                 "primary": false
               }
