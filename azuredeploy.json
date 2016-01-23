@@ -50,7 +50,7 @@
       "type": "string"
     },
     "vmSize": {
-      "defaultValue": "Standard_A4",
+      "defaultValue": "Standard_D3",
       "allowedValues": [
         "Standard_A4",
         "Standard_A7",
@@ -125,6 +125,7 @@
     "lbId": "[resourceId('Microsoft.Network/loadBalancers',variables('lbName'))]",
     "lbName": "frontend-lb",
     "nic1Name": "external",
+    "nic2Name": "int0",
     "osProfile": "[variables(concat('osprofile',parameters('authenticationType')))]",
     "osProfilepassword": {
       "adminPassword": "[parameters('adminPassword')]",
@@ -164,8 +165,15 @@
     "vnetId": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
     "addressPrefix": "10.0.0.0/16",
     "subnet1Name": "Frontend",
+    "subnet1Prefix": "10.0.1.0/24",
+    "subnet1Id": "[concat(variables('vnetId'),'/subnets/',variables('subnet1Name'))]",
+    "subnet2Name": "Web",
+    "subnet2Prefix": "10.0.2.0/24",
+    "subnet2Id": "[concat(variables('vnetId'),'/subnets/',variables('subnet2Name'))]",
     "externalPrivateAddress": "10.0.1.10",
+    "subnet2PrivateAddress": "10.0.2.10",
     "frontendRouteTableId": "[resourceId('Microsoft.Network/routeTables', variables('subnet1Name'))]",
+    "subnet2RouteTableId": "[resourceId('Microsoft.Network/routeTables', variables('subnet2Name'))]",
     "publicIPAddressName": "gateway",
     "publicIPAddressId": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
   },
@@ -196,6 +204,39 @@
       }
     },
     {
+      "type": "Microsoft.Network/routeTables",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('subnet2Name')]",
+      "properties": {
+        "routes": [
+          {
+            "name": "Local-Subnet",
+            "properties": {
+              "addressPrefix": "[variables('subnet2Prefix')]",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "Inside-Vnet",
+            "properties": {
+              "addressPrefix": "[variables('addressPrefix')]",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "[variables('subnet2PrivateAddress')]"
+            }
+          },
+          {
+            "name": "To-Internet",
+            "properties": {
+              "addressPrefix": "0.0.0.0/0",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "[variables('subnet2PrivateAddress')]"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "[variables('apiVersion')]",
       "location": "[resourceGroup().location]",
@@ -210,7 +251,8 @@
       "location": "[resourceGroup().location]",
       "name": "[variables('vnetName')]",
       "dependsOn": [
-        "[variables('frontendRouteTableId')]"
+        "[variables('frontendRouteTableId')]",
+        "[variables('subnet2RouteTableId')]"
       ],
       "properties": {
         "addressSpace": {
@@ -227,6 +269,15 @@
                 "id": "[variables('frontendRouteTableId')]"
               }
             }
+          },
+          {
+            "name": "[variables('subnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('subnet2Prefix')]",
+              "routeTable": {
+                "id": "[variables('subnet2RouteTableId')]"
+              }
+            }
           }
         ]
       }
@@ -239,32 +290,6 @@
       "properties": {
         "dnsSettings": {
           "domainNameLabel": "[parameters('vmName')]"
-        },
-        "idleTimeoutInMinutes": 30,
-        "publicIPAllocationMethod": "Dynamic"
-      }
-    },
-    {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "[variables('apiVersion')]",
-      "location": "[resourceGroup().location]",
-      "name": "[variables('webApps')[0]]",
-      "properties": {
-        "dnsSettings": {
-          "domainNameLabel": "[variables('webApps')[0]]"
-        },
-        "idleTimeoutInMinutes": 30,
-        "publicIPAllocationMethod": "Static"
-      }
-    },
-    {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "[variables('apiVersion')]",
-      "location": "[resourceGroup().location]",
-      "name": "[variables('webApps')[1]]",
-      "properties": {
-        "dnsSettings": {
-          "domainNameLabel": "[variables('webApps')[1]]"
         },
         "idleTimeoutInMinutes": 30,
         "publicIPAllocationMethod": "Static"
@@ -293,6 +318,38 @@
               },
               "subnet": {
                 "id": "[variables('subnet1Id')]"
+              },
+              "loadBalancerInboundNatRules": [
+                {
+                  "id": "[concat(variables('lbId'), '/inboundNatRules/', variables('webApps')[0])]"
+                },
+                {
+                  "id": "[concat(variables('lbId'), '/inboundNatRules/', variables('webApps')[1])]"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "[variables('apiVersion')]",
+      "dependsOn": [
+        "[variables('vnetId')]"
+      ],
+      "location": "[resourceGroup().location]",
+      "name": "[variables('nic2Name')]",
+      "properties": {
+        "enableIPForwarding": true,
+        "ipConfigurations": [
+          {
+            "name": "ipconfig2",
+            "properties": {
+              "privateIPAddress": "[variables('subnet2PrivateAddress')]",
+              "privateIPAllocationMethod": "Static",
+              "subnet": {
+                "id": "[variables('subnet2Id')]"
               }
             }
           }
@@ -304,7 +361,9 @@
       "apiVersion": "[variables('apiVersion')]",
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nic1Name'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nic1Name'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nic2Name'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nic3Name'))]"
       ],
       "location": "[resourceGroup().location]",
       "name": "[parameters('vmName')]",
@@ -325,6 +384,12 @@
               "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nic1Name'))]",
               "properties": {
                 "primary": true
+              }
+            },
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nic2Name'))]",
+              "properties": {
+                "primary": false
               }
             }
           ]
