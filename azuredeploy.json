@@ -83,7 +83,7 @@
     },
     "installSecurityManagement": {
       "type": "bool",
-      "defaultValue": false,
+      "defaultValue": true,
       "metadata": {
         "description": "Install Security Management"
       }
