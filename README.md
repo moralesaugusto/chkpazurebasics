@@ -4,5 +4,5 @@ https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.github
 
 Two Interfaces
 
-https://portal.azure.com/#create/Microsoft.Template/uri/https://raw.githubusercontent.com/moralesaugusto/chkpazurebasics/master/azuredeploy.json
+https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fmoralesaugusto%2Fchkpazurebasics%2Fmaster%2Fazuredeploy.json
 
