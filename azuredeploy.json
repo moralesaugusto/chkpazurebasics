@@ -52,7 +52,7 @@
     "vmSize": {
       "defaultValue": "Standard_A3",
       "allowedValues": [
-        "Standard_A3"
+        "Standard_A3",
         "Standard_A4",
         "Standard_A7",
         "Standard_A9",
