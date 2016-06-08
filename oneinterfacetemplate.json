@@ -52,6 +52,7 @@
     "vmSize": {
       "defaultValue": "Standard_A2",
       "allowedValues": [
+	    "Standard_A1",
 	    "Standard_A2",
         "Standard_A3",
         "Standard_A4",
@@ -162,11 +163,11 @@
     "storageAccountType": "Standard_LRS",
     "vnetName": "vnet",
     "vnetId": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
-    "addressPrefix": "172.16.0.0",
+    "addressPrefix": "172.16.0.0/16",
     "subnet1Name": "Frontend",
     "subnet1Prefix": "172.16.191.0/24",
     "subnet1Id": "[concat(variables('vnetId'),'/subnets/',variables('subnet1Name'))]",
-    "externalPrivateAddress": "10.0.1.10",
+    "externalPrivateAddress": "172.16.191.10",
     "frontendRouteTableId": "[resourceId('Microsoft.Network/routeTables', variables('subnet1Name'))]",
     "publicIPAddressName": "gateway",
     "publicIPAddressId": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
